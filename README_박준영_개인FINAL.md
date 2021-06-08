@@ -124,22 +124,23 @@ AirBnB 커버하기
 
 
 ### 이벤트 도출
-![image](https://user-images.githubusercontent.com/15603058/119298548-337fda80-bc98-11eb-9f96-7d583d156fb9.png)
-
+![image](https://user-images.githubusercontent.com/15603058/121187810-697dab00-c8a3-11eb-87fc-224972b70494.png)
 
 ### 부적격 이벤트 탈락
-![image](https://user-images.githubusercontent.com/15603058/119298594-4f837c00-bc98-11eb-9f67-ec2e882e1f33.png)
+![image](https://user-images.githubusercontent.com/15603058/121187996-9d58d080-c8a3-11eb-8a93-0cb804043af0.png)
 
     - 과정중 도출된 잘못된 도메인 이벤트들을 걸러내는 작업을 수행함
         - 등록시>RoomSearched, 예약시>RoomSelected :  UI 의 이벤트이지, 업무적인 의미의 이벤트가 아니라서 제외
+	- MileageModified : Increased, Decreased 로 구분되어 사용되는 중복된 이벤트로 제외
 
 ### 액터, 커맨드 부착하여 읽기 좋게
-![image](https://user-images.githubusercontent.com/15603058/119298993-113a8c80-bc99-11eb-9bae-4b911317d810.png)
+![image](https://user-images.githubusercontent.com/15603058/121188970-967e8d80-c8a4-11eb-9d17-b0f062be3dc2.png)
 
 ### 어그리게잇으로 묶기
-![image](https://user-images.githubusercontent.com/15603058/119299589-2663eb00-bc9a-11eb-83b9-de7f3efe7548.png)
+![image](https://user-images.githubusercontent.com/15603058/121189332-f6753400-c8a4-11eb-9906-009cb580a188.png)
 
     - Room, Reservation, Payment, Review 은 그와 연결된 command 와 event 들에 의하여 트랜잭션이 유지되어야 하는 단위로 그들 끼리 묶어줌
+    - 신규 개인과제로 Mileage 에 대해 트랜잭션이 유지되어야하는 단위로 묶어줌
 
 ### 바운디드 컨텍스트로 묶기
 
