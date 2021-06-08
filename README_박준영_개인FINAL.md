@@ -34,9 +34,9 @@ AirBnB 커버하기
 1. 호스트가 임대할 숙소를 등록/수정/삭제한다.
 2. 고객이 숙소를 선택하여 예약한다.
 3. 예약과 동시에 결제가 진행된다.
-4. 예약이 되면 예약 내역(Message)이 전달된다.
+4. 예약이 되면 예약과 마일리지 적립 내역(Message)이 전달된다.
 5. 고객이 예약을 취소할 수 있다.
-6. 예약 사항이 취소될 경우 취소 내역(Message)이 전달된다.
+6. 예약 사항이 취소될 경우 취소와 마일리지 감소 내역(Message)이 전달된다.
 7. 숙소에 후기(review)를 남길 수 있다.
 8. 전체적인 숙소에 대한 정보 및 예약 상태 등을 한 화면에서 확인 할 수 있다.(viewpage)
 9. 결재가 되면 마일리지(Mileage) 가 적립된다.
@@ -168,29 +168,31 @@ AirBnB 커버하기
 
 ### 1차 완성본에 대한 기능적/비기능적 요구사항을 커버하는지 검증
 
-![image](https://user-images.githubusercontent.com/15603058/119306321-f110ca80-bca4-11eb-804c-a965220bad61.png)
+![image](https://user-images.githubusercontent.com/15603058/121193072-7d77db80-c8a8-11eb-90fc-b5feed967274.png)
 
     - 호스트가 임대할 숙소를 등록/수정/삭제한다.(ok)
     - 고객이 숙소를 선택하여 예약한다.(ok)
     - 예약과 동시에 결제가 진행된다.(ok)
-    - 예약이 되면 예약 내역(Message)이 전달된다.(?)
+    - 예약이 되면 예약과 마일리지 적립 내역(Message)이 전달된다.(?)
     - 고객이 예약을 취소할 수 있다.(ok)
-    - 예약 사항이 취소될 경우 취소 내역(Message)이 전달된다.(?)
+    - 예약 사항이 취소될 경우 취소와 마일리지 감소 내역(Message)이 전달된다.(?)
     - 숙소에 후기(review)를 남길 수 있다.(ok)
     - 전체적인 숙소에 대한 정보 및 예약 상태 등을 한 화면에서 확인 할 수 있다.(View-green Sticker 추가로 ok)
+    - 결재가 되면 마일리지(Mileage) 가 적립된다.(ok)
+    - 취소가 되면 마일리지가 감소된다.(ok)
     
 ### 모델 수정
 
-![image](https://user-images.githubusercontent.com/15603058/119307481-b740c380-bca6-11eb-9ee6-fda446e299bc.png)
-    
+![image](https://user-images.githubusercontent.com/15603058/121193889-2d4d4900-c8a9-11eb-8237-d560005d1d56.png)
+
     - 수정된 모델은 모든 요구사항을 커버함.
 
 ### 비기능 요구사항에 대한 검증
 
-![image](https://user-images.githubusercontent.com/15603058/119311800-79df3480-bcac-11eb-9c1b-0382d981f92f.png)
+![image](https://user-images.githubusercontent.com/15603058/121194265-8f0db300-c8a9-11eb-855d-99f41a09abdc.png)
 
 - 마이크로 서비스를 넘나드는 시나리오에 대한 트랜잭션 처리
-- 고객 예약시 결제처리:  결제가 완료되지 않은 예약은 절대 받지 않는다고 결정하여, ACID 트랜잭션 적용. 예약 완료시 사전에 방 상태를 확인하는 것과 결제처리에 대해서는 Request-Response 방식 처리
+- 고객 예약시 결제처리:  결제가 완료되지 않은 예약은 절대 받지 않는다고 결정하여, ACID 트랜잭션 적용. 예약 완료시 사전에 방 상태를 확인하는 것과 결제처리 및 마일리지 적립에 대해서는 Request-Response 방식 처리
 - 결제 완료시 Host 연결 및 예약처리:  reservation 에서 room 마이크로서비스로 예약요청이 전달되는 과정에 있어서 room 마이크로 서비스가 별도의 배포주기를 가지기 때문에 Eventual Consistency 방식으로 트랜잭션 처리함.
 - 나머지 모든 inter-microservice 트랜잭션: 예약상태, 후기처리 등 모든 이벤트에 대해 데이터 일관성의 시점이 크리티컬하지 않은 모든 경우가 대부분이라 판단, Eventual Consistency 를 기본으로 채택함.
 
