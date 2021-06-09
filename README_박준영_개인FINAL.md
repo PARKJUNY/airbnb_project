@@ -761,10 +761,10 @@ codebuild 프로젝트 및 빌드 이력
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: dr-room
+  name: dr-mileage
   namespace: airbnb
 spec:
-  host: room
+  host: mileage
   trafficPolicy:
     connectionPool:
       http:
@@ -784,9 +784,9 @@ kubectl get ns -L istio-injection
 kubectl label namespace airbnb istio-injection=enabled 
 ```
 
-![Circuit Breaker(istio-enjection)](https://user-images.githubusercontent.com/38099203/119295450-d6812600-bc91-11eb-8aad-46eeac968a41.PNG)
+![image](https://user-images.githubusercontent.com/15603058/121355199-98ab1f80-c96a-11eb-8a67-2eabf54aade9.png)
 
-![Circuit Breaker(pod)](https://user-images.githubusercontent.com/38099203/119295568-0cbea580-bc92-11eb-9d2b-8580f3576b47.PNG)
+![image](https://user-images.githubusercontent.com/15603058/121355032-70bbbc00-c96a-11eb-8f03-3f18f1078391.png)
 
 
 * 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인:
@@ -795,78 +795,75 @@ siege 실행
 
 ```
 kubectl run siege --image=apexacme/siege-nginx -n airbnb
-kubectl exec -it siege -c siege -n airbnb -- /bin/bash
+kubectl exec -it siege-5c7c46b788-svq6c -c siege -n airbnb -- /bin/bash
 ```
 
 
 - 동시사용자 1로 부하 생성 시 모두 정상
 ```
-siege -c1 -t10S -v --content-type "application/json" 'http://room:8080/rooms POST {"desc": "Beautiful House3"}'
+siege -c1 -t10S -v --content-type "application/json" 'http://mileage:8080/mileages POST {"roomId": "1", "payId": "1", "mileagePoint": "1", "status" : "Mileage Increased"}'
 
 ** SIEGE 4.0.4
 ** Preparing 1 concurrent users for battle.
 The server is now under siege...
-HTTP/1.1 201     0.49 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.05 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     254 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     256 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     256 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     256 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
 ```
 
 - 동시사용자 2로 부하 생성 시 503 에러 168개 발생
 ```
-siege -c2 -t10S -v --content-type "application/json" 'http://room:8080/rooms POST {"desc": "Beautiful House3"}'
+siege -c2 -t10S -v --content-type "application/json" 'http://mileage:8080/mileages POST {"roomId": "1", "payId": "1", "mileagePoint": "1", "status" : "Mileage Increased"}'
 
 ** SIEGE 4.0.4
 ** Preparing 2 concurrent users for battle.
 The server is now under siege...
-HTTP/1.1 201     0.02 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 503     0.10 secs:      81 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.04 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.05 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.22 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.08 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.07 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 503     0.01 secs:      81 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 503     0.01 secs:      81 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     258 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 503     0.00 secs:      81 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 503     0.00 secs:      81 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.03 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.02 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 503     0.01 secs:      81 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 503     0.00 secs:      81 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 503     0.00 secs:      81 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 503     0.00 secs:      81 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 503     0.01 secs:      81 bytes ==> POST http://mileage:8080/mileages
 
 Lifting the server siege...
-Transactions:                   1904 hits
-Availability:                  91.89 %
-Elapsed time:                   9.89 secs
-Data transferred:               0.48 MB
+Transactions:                   1344 hits
+Availability:                  80.67 %
+Elapsed time:                   9.75 secs
+Data transferred:               0.35 MB
 Response time:                  0.01 secs
-Transaction rate:             192.52 trans/sec
-Throughput:                     0.05 MB/sec
-Concurrency:                    1.98
-Successful transactions:        1904
-Failed transactions:             168
-Longest transaction:            0.03
+Transaction rate:             137.85 trans/sec
+Throughput:                     0.04 MB/sec
+Concurrency:                    1.96
+Successful transactions:        1344
+Failed transactions:             322
+Longest transaction:            0.07
 Shortest transaction:           0.00
 ```
 
 - kiali 화면에 서킷 브레이크 확인
 
-![Circuit Breaker(kiali)](https://user-images.githubusercontent.com/38099203/119298194-7f7e4f80-bc97-11eb-8447-678eece29e5c.PNG)
+![image](https://user-images.githubusercontent.com/15603058/121354799-33efc500-c96a-11eb-895b-641b3c9b013b.png)
 
 
 - 다시 최소 Connection pool로 부하 다시 정상 확인
@@ -875,38 +872,32 @@ Shortest transaction:           0.00
 ** SIEGE 4.0.4
 ** Preparing 1 concurrent users for battle.
 The server is now under siege...
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.00 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.00 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.00 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-
-:
-:
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.02 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.00 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.02 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.02 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.02 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.00 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.02 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.00 secs:     257 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.01 secs:     257 bytes ==> POST http://mileage:8080/mileages
 
 Lifting the server siege...
-Transactions:                   1139 hits
+Transactions:                    828 hits
 Availability:                 100.00 %
-Elapsed time:                   9.19 secs
-Data transferred:               0.28 MB
+Elapsed time:                   9.95 secs
+Data transferred:               0.20 MB
 Response time:                  0.01 secs
-Transaction rate:             123.94 trans/sec
-Throughput:                     0.03 MB/sec
+Transaction rate:              83.22 trans/sec
+Throughput:                     0.02 MB/sec
 Concurrency:                    0.98
-Successful transactions:        1139
+Successful transactions:         828
 Failed transactions:               0
-Longest transaction:            0.04
+Longest transaction:            0.06
 Shortest transaction:           0.00
 
 ```
