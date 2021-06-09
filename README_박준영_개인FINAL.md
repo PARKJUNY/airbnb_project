@@ -566,7 +566,7 @@ public interface MileageService {
 
 ```
 # 확인(마일리지 서비스 중지 후 예약 요청, 마일리지 서비스 실행 후 예약 요청->결제->마일리지적립)
-```
+
 D:\LV2\Source\airbnb_Final\mileage>http POST http://localhost:8088/reservations roomId=1 status=reqReserve
 HTTP/1.1 500 Internal Server Error
 Content-Type: application/json;charset=UTF-8
@@ -580,9 +580,9 @@ transfer-encoding: chunked
     "status": 500,
     "timestamp": "2021-06-09T09:52:54.359+0000"
 }
-```
 
-```
+
+
 D:\LV2\Source\airbnb_Final\mileage>http POST http://localhost:8088/reservations roomId=1 status=reqReserve
 HTTP/1.1 201 Created
 Content-Type: application/json;charset=UTF-8
@@ -614,10 +614,11 @@ transfer-encoding: chunked
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
 
 
-결제가 이루어진 후에 숙소 시스템의 상태가 업데이트 되고, 예약 시스템의 상태가 업데이트 되며, 예약 및 취소 메시지가 전송되는 시스템과의 통신 행위는 비동기식으로 처리한다.
- 
-- 이를 위하여 결제가 승인되면 결제가 승인 되었다는 이벤트를 카프카로 송출한다. (Publish)
- 
+동기식 호출을 제외한 나머지는 비동기로 호출한다.
+예) 1. 결제 취소 시 결제 취소 이벤트 Publish
+    2. Subscribe 후 마일리지 적립 취소 후 취소 이벤트를 카프카로 Publish
+    3. Subscribe 후 message 서비스에서 처리
+  
 ```
 # Payment.java
 
@@ -632,48 +633,63 @@ public class Payment {
 
     ....
 
-    @PostPersist
-    public void onPostPersist(){
-        ////////////////////////////
-        // 결제 승인 된 경우
-        ////////////////////////////
+    @PostUpdate
+    public void onPostUpdate(){
 
-        // 이벤트 발행 -> PaymentApproved
-        PaymentApproved paymentApproved = new PaymentApproved();
-        BeanUtils.copyProperties(this, paymentApproved);
-        paymentApproved.publishAfterCommit();
+        //////////////////////
+        // 결제 취소 된 경우
+        //////////////////////
+        System.out.println("================= this.getStatus()     : " + this.getStatus());
+        
+        if(this.getStatus().equals("cancelled")) {
+            // 이벤트 발행 -> PaymentCancelled
+            PaymentCancelled paymentCancelled = new PaymentCancelled();
+            BeanUtils.copyProperties(this, paymentCancelled);
+            paymentCancelled.publishAfterCommit();
+        }
     }
     
     ....
 }
 ```
 
-- 예약 시스템에서는 결제 승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+- 마일리지 시스템에서는 결제 취소 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 
 ```
-# Reservation.java
+# 
 
 package airbnb;
 
-    @PostUpdate
-    public void onPostUpdate(){
-    
-        ....
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverPaymentCancelled_DecreaseMileage(@Payload PaymentCancelled paymentCancelled){
 
-        if(this.getStatus().equals("reserved")) {
+        if(paymentCancelled.isMe()){
 
-            ////////////////////
-            // 예약 확정된 경우
-            ////////////////////
+            /////////////////////////////////////////////
+            // 결제 취소 요청이 왔을 때 -> status -> cancelled 
+            /////////////////////////////////////////////
+            System.out.println("\n\n##### listener DecreaseMileage : " + paymentCancelled.toJson() + "\n\n");
+            
+            // 취소시킬 mileage 추출
+            long mileageId = paymentCancelled.getMileageId(); // 취소시킬 mileage ID
 
-            // 이벤트 발생 --> ReservationConfirmed
-            ReservationConfirmed reservationConfirmed = new ReservationConfirmed();
-            BeanUtils.copyProperties(this, reservationConfirmed);
-            reservationConfirmed.publishAfterCommit();
+            Optional<Mileage> res = mileageRepository.findById(mileageId);
+            Mileage mileage = res.get();
+
+            mileage.setMileagePoint(mileage.getMileagePoint()); // 마일리지 감소양
+            mileage.setStatus("Mileage Canceled"); // 마일리지 감소
+            mileage.setMileagePoint(0);
+
+            System.out.println("Edited mileageID    : " + mileage.getMileageId());
+            System.out.println("Edited roomID       : " + mileage.getRoomId());
+            System.out.println("Edited payID        : " + mileage.getPayId());
+            System.out.println("Edited mileagePoint : " + mileage.getMileagePoint());
+            System.out.println("Edited status       : " + mileage.getStatus());
+
+            // DB Update
+            mileageRepository.save(mileage);
+
         }
-        
-        ....
-        
     }
 
 ```
