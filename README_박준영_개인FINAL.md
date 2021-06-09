@@ -566,6 +566,7 @@ public interface MileageService {
 
 ```
 # 확인(마일리지 서비스 중지 후 예약 요청, 마일리지 서비스 실행 후 예약 요청->결제->마일리지적립)
+```
 D:\LV2\Source\airbnb_Final\mileage>http POST http://localhost:8088/reservations roomId=1 status=reqReserve
 HTTP/1.1 500 Internal Server Error
 Content-Type: application/json;charset=UTF-8
@@ -579,9 +580,9 @@ transfer-encoding: chunked
     "status": 500,
     "timestamp": "2021-06-09T09:52:54.359+0000"
 }
+```
 
-
-
+```
 D:\LV2\Source\airbnb_Final\mileage>http POST http://localhost:8088/reservations roomId=1 status=reqReserve
 HTTP/1.1 201 Created
 Content-Type: application/json;charset=UTF-8
@@ -602,8 +603,10 @@ transfer-encoding: chunked
     "roomId": 1,
     "status": "reqReserve"
 }
+```
 
 - 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
+
 
 
 
