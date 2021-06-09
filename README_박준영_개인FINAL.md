@@ -566,7 +566,42 @@ public interface MileageService {
 
 ```
 # 확인(마일리지 서비스 중지 후 예약 요청, 마일리지 서비스 실행 후 예약 요청->결제->마일리지적립)
-![image](https://user-images.githubusercontent.com/15603058/121333969-3b0bd880-c954-11eb-82f1-3a535e44ca4c.png)```
+D:\LV2\Source\airbnb_Final\mileage>http POST http://localhost:8088/reservations roomId=1 status=reqReserve
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json;charset=UTF-8
+Date: Wed, 09 Jun 2021 09:52:54 GMT
+transfer-encoding: chunked
+
+{
+    "error": "Internal Server Error",
+    "message": "Could not commit JPA transaction; nested exception is javax.persistence.RollbackException: Error while committing the transaction",
+    "path": "/reservations",
+    "status": 500,
+    "timestamp": "2021-06-09T09:52:54.359+0000"
+}
+
+
+
+D:\LV2\Source\airbnb_Final\mileage>http POST http://localhost:8088/reservations roomId=1 status=reqReserve
+HTTP/1.1 201 Created
+Content-Type: application/json;charset=UTF-8
+Date: Wed, 09 Jun 2021 09:54:14 GMT
+Location: http://localhost:8083/reservations/3
+transfer-encoding: chunked
+
+{
+    "_links": {
+        "reservation": {
+            "href": "http://localhost:8083/reservations/3"
+        },
+        "self": {
+            "href": "http://localhost:8083/reservations/3"
+        }
+    },
+    "payId": null,
+    "roomId": 1,
+    "status": "reqReserve"
+}
 
 - 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
 
