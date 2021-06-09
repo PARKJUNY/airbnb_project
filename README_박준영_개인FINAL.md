@@ -728,9 +728,9 @@ kubectl apply -f eks-admin-cluster-role-binding.yml
 ```
 Token 확인
 kubectl -n kube-system get secret
-kubectl -n kube-system describe secret eks-admin-token-rjpmq
+kubectl -n kube-system describe secret eks-admin-token-q82sg
 ```
-![codebuild(token)](https://user-images.githubusercontent.com/38099203/119293511-84d69c80-bc8d-11eb-99c7-e8929e6a41e4.PNG)
+![image](https://user-images.githubusercontent.com/15603058/121338667-ac4d8a80-c958-11eb-8f8d-915f72774351.png)
 ```
 buildspec.yml 파일 
 마이크로 서비스 room의 yml 파일 이용하도록 세팅
