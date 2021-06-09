@@ -942,19 +942,30 @@ kubectl delete hpa room -n airbnb
 
 - seige 로 배포작업 직전에 워크로드를 모니터링 함.
 ```
-siege -c100 -t60S -r10 -v --content-type "application/json" 'http://room:8080/rooms POST {"desc": "Beautiful House3"}'
-
+root@siege-5c7c46b788-svq6c:/# siege -c100 -t60S -v --content-type "application/json" 'http://mileage:8080/mileages POST {"roomId": "1", "payId": "1", "mileagePoint": "1", "status" : "Mileage Increased"}'
 ** SIEGE 4.0.4
-** Preparing 1 concurrent users for battle.
+** Preparing 100 concurrent users for battle.
 The server is now under siege...
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.03 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.00 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.02 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 201     0.01 secs:     260 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 201     0.04 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.05 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.06 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.07 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.08 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.09 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.09 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.08 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.08 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.09 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.09 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.11 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.09 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.10 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.09 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.10 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.11 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.10 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.11 secs:     259 bytes ==> POST http://mileage:8080/mileages
+HTTP/1.1 201     0.10 secs:     259 bytes ==> POST http://mileage:8080/mileages
 
 ```
 
@@ -966,16 +977,16 @@ kubectl set image ...
 - seige 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
 
 ```
-siege -c100 -t60S -r10 -v --content-type "application/json" 'http://room:8080/rooms POST {"desc": "Beautiful House3"}'
+root@siege-5c7c46b788-svq6c:/# siege -c100 -t60S -v --content-type "application/json" 'http://mileage:8080/mileages POST {"roomId": "1", "payId": "1", "mileagePoint": "1", "status" : "Mileage Increased"}'
 
 
-Transactions:                   7732 hits
-Availability:                  87.32 %
-Elapsed time:                  17.12 secs
-Data transferred:               1.93 MB
-Response time:                  0.18 secs
-Transaction rate:             451.64 trans/sec
-Throughput:                     0.11 MB/sec
+Transactions:                   8250 hits
+Availability:                  86.32 %
+Elapsed time:                  21.86 secs
+Data transferred:               2.04 MB
+Response time:                  0.52 secs
+Transaction rate:             377.44 trans/sec
+Throughput:                     0.09 MB/sec
 Concurrency:                   81.21
 Successful transactions:        7732
 Failed transactions:            1123
@@ -989,7 +1000,7 @@ Shortest transaction:           0.00
 # deployment.yaml 의 readiness probe 의 설정:
 ```
 
-![probe설정](https://user-images.githubusercontent.com/38099203/119301424-71333200-bc9d-11eb-9f75-f8c98fce70a3.PNG)
+![image](https://user-images.githubusercontent.com/15603058/121364529-d318ba80-c972-11eb-9120-01e3935b5202.png)
 
 ```
 kubectl apply -f kubernetes/deployment.yml
@@ -998,17 +1009,17 @@ kubectl apply -f kubernetes/deployment.yml
 - 동일한 시나리오로 재배포 한 후 Availability 확인:
 ```
 Lifting the server siege...
-Transactions:                  27657 hits
+Transactions:                  14586 hits
 Availability:                 100.00 %
-Elapsed time:                  59.41 secs
-Data transferred:               6.91 MB
-Response time:                  0.21 secs
-Transaction rate:             465.53 trans/sec
-Throughput:                     0.12 MB/sec
-Concurrency:                   99.60
-Successful transactions:       27657
+Elapsed time:                  59.73 secs
+Data transferred:               3.58 MB
+Response time:                  0.41 secs
+Transaction rate:             244.20 trans/sec
+Throughput:                     0.06 MB/sec
+Concurrency:                   99.37
+Successful transactions:       14586
 Failed transactions:               0
-Longest transaction:            1.20
+Longest transaction:            2.41
 Shortest transaction:           0.00
 
 ```
