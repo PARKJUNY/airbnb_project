@@ -507,36 +507,22 @@ http PATCH http://a84ad56482306476ca2c15d1d2a7682e-1946155919.ap-northeast-2.elb
 
 ## 동기식 호출(Sync) 과 Fallback 처리
 
-분석 단계에서의 조건 중 하나로 예약 시 숙소(room) 간의 예약 가능 상태 확인 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다. 또한 예약(reservation) -> 결제(payment) 서비스도 동기식으로 처리하기로 하였다.
+분석 단계에서의 조건 중 하나로 결제 후 마일리지 적립은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다.
 
-- 룸, 결제 서비스를 호출하기 위하여 Stub과 (FeignClient) 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
+- 서비스를 호출하기 위하여 Stub과 (FeignClient) 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
 
 ```
-# PaymentService.java
+# MileageService.java
 
 package airbnb.external;
 
 <import문 생략>
 
-@FeignClient(name="Payment", url="${prop.room.url}")
-public interface PaymentService {
+@FeignClient(name="Mileage", url="${prop.gateway.url}")
+public interface MileageService {
 
-    @RequestMapping(method= RequestMethod.POST, path="/payments")
-    public void approvePayment(@RequestBody Payment payment);
-
-}
-
-# RoomService.java
-
-package airbnb.external;
-
-<import문 생략>
-
-@FeignClient(name="Room", url="${prop.room.url}")
-public interface RoomService {
-
-    @RequestMapping(method= RequestMethod.GET, path="/check/chkAndReqReserve")
-    public boolean chkAndReqReserve(@RequestParam("roomId") long roomId);
+    @RequestMapping(method= RequestMethod.POST, path="/mileages")
+    public void increaseMileage(@RequestBody Mileage mileage);
 
 }
 
@@ -545,45 +531,33 @@ public interface RoomService {
 
 - 예약 요청을 받은 직후(@PostPersist) 가능상태 확인 및 결제를 동기(Sync)로 요청하도록 처리
 ```
-# Reservation.java (Entity)
+# Payment.java (Entity)
 
     @PostPersist
     public void onPostPersist(){
+        ////////////////////////////
+        // 결제 승인 된 경우
+        ////////////////////////////
+                
+        // 이벤트 발행 -> PaymentApproved
+        PaymentApproved paymentApproved = new PaymentApproved();
+        BeanUtils.copyProperties(this, paymentApproved);
+        paymentApproved.publishAfterCommit();
 
-        ////////////////////////////////
-        // RESERVATION에 INSERT 된 경우 
-        ////////////////////////////////
+        //////////////////////////////
+        // Mileage 적립 진행 (POST방식)
+        //////////////////////////////
+        airbnb.external.Mileage mileage = new airbnb.external.Mileage();
+        mileage.setRoomId(this.getRoomId());
+        mileage.setPayId(this.getPayId());
+        mileage.setMileagePoint(1);
+        mileage.setStatus("Mileage Incresed");
+        PaymentApplication.applicationContext.getBean(airbnb.external.MileageService.class)
+            .increaseMileage(mileage);
+        
+        System.out.println("== Added mileageId : " + mileage.getMileageId());
+        System.out.println("== Added payId     : " + mileage.getPayId());
 
-        ////////////////////////////////////
-        // 예약 요청(reqReserve) 들어온 경우
-        ////////////////////////////////////
-
-        // 해당 ROOM이 Available한 상태인지 체크
-        boolean result = ReservationApplication.applicationContext.getBean(airbnb.external.RoomService.class)
-                        .chkAndReqReserve(this.getRoomId());
-        System.out.println("######## Check Result : " + result);
-
-        if(result) { 
-
-            // 예약 가능한 상태인 경우(Available)
-
-            //////////////////////////////
-            // PAYMENT 결제 진행 (POST방식) - SYNC 호출
-            //////////////////////////////
-            airbnb.external.Payment payment = new airbnb.external.Payment();
-            payment.setRsvId(this.getRsvId());
-            payment.setRoomId(this.getRoomId());
-            payment.setStatus("paid");
-            ReservationApplication.applicationContext.getBean(airbnb.external.PaymentService.class)
-                .approvePayment(payment);
-
-            /////////////////////////////////////
-            // 이벤트 발행 --> ReservationCreated
-            /////////////////////////////////////
-            ReservationCreated reservationCreated = new ReservationCreated();
-            BeanUtils.copyProperties(this, reservationCreated);
-            reservationCreated.publishAfterCommit();
-        }
     }
 ```
 
@@ -591,18 +565,8 @@ public interface RoomService {
 
 
 ```
-# 결제 (pay) 서비스를 잠시 내려놓음 (ctrl+c)
-
-# 예약 요청
-http POST http://localhost:8088/reservations roomId=1 status=reqReserve   #Fail
-
-# 결제서비스 재기동
-cd payment
-mvn spring-boot:run
-
-# 예약 요청
-http POST http://localhost:8088/reservations roomId=1 status=reqReserve   #Success
-```
+# 확인(마일리지 서비스 중지 후 예약 요청, 마일리지 서비스 실행 후 예약 요청->결제->마일리지적립)
+![image](https://user-images.githubusercontent.com/15603058/121333969-3b0bd880-c954-11eb-82f1-3a535e44ca4c.png)```
 
 - 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
 
