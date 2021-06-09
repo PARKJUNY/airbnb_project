@@ -227,7 +227,7 @@ AirBnB 커버하기
   ![image](https://user-images.githubusercontent.com/15603058/121322340-d6e41700-c949-11eb-86e6-6753cd5b1285.png)
   ![image](https://user-images.githubusercontent.com/15603058/121322512-fe3ae400-c949-11eb-93b5-b37477ca5506.png)
 - 실제로 view 페이지를 조회해 보면 모든 room에 대한 전반적인 예약 상태, 결제 상태, 리뷰 건수 등의 정보를 종합적으로 알 수 있다
-  ![image](https://user-images.githubusercontent.com/31723044/119357063-1b34ad80-bce2-11eb-94fb-a587261ab56f.png)
+  ![image](https://user-images.githubusercontent.com/15603058/121326022-1a8c5000-c94d-11eb-8908-e0d30ad72cf3.png)
 
 
 ## API 게이트웨이
@@ -363,31 +363,29 @@ Airbnb 프로젝트에서는 PolicyHandler에서 처리 시 어떤 건에 대한
 
 아래의 구현 예제를 보면
 
-예약(Reservation)을 하면 동시에 연관된 방(Room), 결제(Payment) 등의 서비스의 상태가 적당하게 변경이 되고,
-예약건의 취소를 수행하면 다시 연관된 방(Room), 결제(Payment) 등의 서비스의 상태값 등의 데이터가 적당한 상태로 변경되는 것을
+예약(Reservation)을 하면 동시에 연관된 방(Room), 결제(Payment), 마일리지(Mileage) 등의 서비스의 상태가 적당하게 변경이 되고,
+예약건의 취소를 수행하면 다시 연관된 방(Room), 결제(Payment), 마일리지(Mileage) 등의 서비스의 상태값 등의 데이터가 적당한 상태로 변경되는 것을
 확인할 수 있습니다.
 
+방, 예약은 팀 Final 시 완료하여 캡처 생략
+
 예약등록
-![image](https://user-images.githubusercontent.com/31723044/119320227-54572880-bcb6-11eb-973b-a9a5cd1f7e21.png)
-예약 후 - 방 상태
-![image](https://user-images.githubusercontent.com/31723044/119320300-689b2580-bcb6-11eb-933e-98be5aadca61.png)
-예약 후 - 예약 상태
-![image](https://user-images.githubusercontent.com/31723044/119320390-810b4000-bcb6-11eb-8c62-48f6765c570a.png)
+![image](https://user-images.githubusercontent.com/15603058/121325627-b6698c00-c94c-11eb-8fac-667735d3511a.png)
 예약 후 - 결제 상태
-![image](https://user-images.githubusercontent.com/31723044/119320524-a39d5900-bcb6-11eb-864b-173711eb9e94.png)
+![image](https://user-images.githubusercontent.com/15603058/121325666-c1bcb780-c94c-11eb-998f-c7ab4879c365.png)
+예약 후 - 마일리지 상태
+![image](https://user-images.githubusercontent.com/15603058/121325713-cd0fe300-c94c-11eb-916c-82e06059af70.png)
 예약 취소
-![image](https://user-images.githubusercontent.com/31723044/119320595-b6b02900-bcb6-11eb-8d8d-0d5c59603c72.png)
-취소 후 - 방 상태
-![image](https://user-images.githubusercontent.com/31723044/119320680-ccbde980-bcb6-11eb-8b7c-66315329aafe.png)
-취소 후 - 예약 상태
-![image](https://user-images.githubusercontent.com/31723044/119320747-dcd5c900-bcb6-11eb-9c44-fd3781c7c55f.png)
-취소 후 - 결제 상태
-![image](https://user-images.githubusercontent.com/31723044/119320806-ee1ed580-bcb6-11eb-8ccf-8c81385cc8ba.png)
+![image](https://user-images.githubusercontent.com/15603058/121326269-5b846480-c94d-11eb-9f83-9de0b5bf2550.png)
+예약 후 - 결제 상태
+![image](https://user-images.githubusercontent.com/15603058/121326400-7c4cba00-c94d-11eb-817b-ea5dcc7e433e.png)
+예약 후 - 마일리지 상태
+![image](https://user-images.githubusercontent.com/15603058/121326446-8a9ad600-c94d-11eb-88f6-1cb7e4b6f63b.png)
 
 
 ## DDD 의 적용
 
-- 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다. (예시는 room 마이크로 서비스). 이때 가능한 현업에서 사용하는 언어 (유비쿼터스 랭귀지)를 그대로 사용하려고 노력했다. 현실에서 발생가는한 이벤트에 의하여 마이크로 서비스들이 상호 작용하기 좋은 모델링으로 구현을 하였다.
+- 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다. (예시는 mileage 마이크로 서비스). 이때 가능한 현업에서 사용하는 언어 (유비쿼터스 랭귀지)를 그대로 사용하려고 노력했다. 현실에서 발생가는한 이벤트에 의하여 마이크로 서비스들이 상호 작용하기 좋은 모델링으로 구현을 하였다.
 
 ```
 package airbnb;
@@ -396,17 +394,51 @@ import javax.persistence.*;
 import org.springframework.beans.BeanUtils;
 
 @Entity
-@Table(name="Room_table")
-public class Room {
+@Table(name="Mileage_table")
+public class Mileage {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private Long roomId;       // 방ID
-    private String status;     // 방 상태
-    private String desc;       // 방 상세 설명
-    private Long reviewCnt;    // 리뷰 건수
-    private String lastAction; // 최종 작업
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long mileageId;
+    private Long roomId;
+    private Long payId;
+    private Integer mileagePoint;
+    private String status;
 
+    @PostPersist
+    public void onPostPersist(){
+        ////////////////////////////
+        // 결제 승인 된 경우 - 마일리지 증가
+        ////////////////////////////
+
+        // 이벤트 발행 -> MileageIncreased        
+        MileageIncreased mileageIncreased = new MileageIncreased();
+        
+        BeanUtils.copyProperties(this, mileageIncreased);
+        mileageIncreased.publishAfterCommit();
+    }
+
+    @PostUpdate
+    public void onPostUpdate(){
+
+        //////////////////////
+        // 결제 취소 된 경우 - 마일리지 감소
+        //////////////////////
+
+        // 이벤트 발행 -> MileageDecreased        
+        MileageDecreased mileageDecreased = new MileageDecreased();
+        BeanUtils.copyProperties(this, mileageDecreased);
+        mileageDecreased.publishAfterCommit();
+    }
+
+    public Long getMileageId() {
+        return mileageId;
+    }
+
+    public void setMileageId(Long mileageId) {
+        this.mileageId = mileageId;
+    }
+    
     public Long getRoomId() {
         return roomId;
     }
@@ -414,33 +446,28 @@ public class Room {
     public void setRoomId(Long roomId) {
         this.roomId = roomId;
     }
+
+    public Long getPayId() {
+        return payId;
+    }
+
+    public void setPayId(Long payId) {
+        this.payId = payId;
+    }
+    
+    public Integer getMileagePoint() {
+        return mileagePoint;
+    }
+
+    public void setMileagePoint(Integer mileagePoint) {
+        this.mileagePoint = mileagePoint;
+    }
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
-    }
-    public String getDesc() {
-        return desc;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
-    }
-    public Long getReviewCnt() {
-        return reviewCnt;
-    }
-
-    public void setReviewCnt(Long reviewCnt) {
-        this.reviewCnt = reviewCnt;
-    }
-    public String getLastAction() {
-        return lastAction;
-    }
-
-    public void setLastAction(String lastAction) {
-        this.lastAction = lastAction;
     }
 }
 
@@ -452,21 +479,29 @@ package airbnb;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-@RepositoryRestResource(collectionResourceRel="rooms", path="rooms")
-public interface RoomRepository extends PagingAndSortingRepository<Room, Long>{
+@RepositoryRestResource(collectionResourceRel="mileages", path="mileages")
+public interface MileageRepository extends PagingAndSortingRepository<Mileage, Long>{
+
 
 }
 ```
 - 적용 후 REST API 의 테스트
 ```
 # room 서비스의 room 등록
-http POST http://localhost:8088/rooms desc="Beautiful House"  
+http POST http://localhost:8088/rooms desc="Beautiful House"
+http POST http://a84ad56482306476ca2c15d1d2a7682e-1946155919.ap-northeast-2.elb.amazonaws.com:8080/rooms desc="Personal Final House"
 
 # reservation 서비스의 예약 요청
 http POST http://localhost:8088/reservations roomId=1 status=reqReserve
+http POST http://a84ad56482306476ca2c15d1d2a7682e-1946155919.ap-northeast-2.elb.amazonaws.com:8080/reservations roomId=1 status=reqReserve
 
 # reservation 서비스의 예약 상태 확인
 http GET http://localhost:8088/reservations
+http GET http://a84ad56482306476ca2c15d1d2a7682e-1946155919.ap-northeast-2.elb.amazonaws.com:8080/payments/1
+
+# reservation 서비스의 예약 취소 요청
+http PATCH http://localhost:8088/reservations/1 status=reqCancel
+http PATCH http://a84ad56482306476ca2c15d1d2a7682e-1946155919.ap-northeast-2.elb.amazonaws.com:8080/reservations/1 status=reqCancel
 
 ```
 
